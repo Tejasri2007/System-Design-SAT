@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WalletWave — Digital Wallet</title>
+<style>
+:root{--ink:#172033;--muted:#697386;--line:#e7eaf0;--bg:#f5f7fb;--purple:#6d4aff;--pink:#f05a9d;--green:#168a63}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif;color:var(--ink)}
+header{background:#fff;border-bottom:1px solid var(--line);padding:17px max(5vw,20px);display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:2}
+.brand{font-size:21px;font-weight:800;letter-spacing:-.5px}.brand span{color:var(--purple)}.tag{color:var(--muted);font-size:12px}
+main{max-width:1150px;margin:28px auto;padding:0 20px}.hero{background:linear-gradient(120deg,#211a50,#6d4aff 65%,#ed62a2);color:#fff;border-radius:22px;padding:28px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 12px 35px #5037a329}
+.hero h1{font-size:30px;margin:4px 0}.hero p{margin:4px 0;color:#e9e5ff}.balance-label{font-size:12px;opacity:.85}.balance{font-size:35px;font-weight:800}.pill{border:1px solid #ffffff66;border-radius:30px;padding:7px 12px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:18px}.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:0 5px 18px #19284a06}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+h2{font-size:17px;margin:0 0 14px}label{display:block;font-size:12px;color:var(--muted);margin:11px 0 5px}input,select{width:100%;border:1px solid #dce1eb;border-radius:10px;padding:11px;font:inherit;outline:none}input:focus,select:focus{border-color:var(--purple)}
+button,.btn{border:0;border-radius:10px;padding:11px 14px;background:var(--purple);color:#fff;font-weight:700;cursor:pointer;font:inherit}button:hover{opacity:.9}.secondary{background:#f0edff;color:#5537d7}.full{width:100%;margin-top:13px}.small{font-size:12px;color:var(--muted)}.statrow{display:flex;gap:10px;flex-wrap:wrap}.stat{background:#f7f6ff;border-radius:12px;padding:12px;flex:1;min-width:120px}.stat b{display:block;font-size:19px}.stat small{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}.status{font-weight:700;color:var(--green)}.status.FAILED{color:#d33}.notice{padding:10px 12px;background:#f8f6ff;border-radius:10px;margin:8px 0;font-size:13px}.arch{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.arch div{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fafaff;font-size:13px}.toast{padding:10px;border-radius:10px;background:#eaf8f1;color:#176447;margin-bottom:10px;display:none}.toast.error{background:#fff0f0;color:#b42318}
+@media(max-width:800px){.span-4,.span-6,.span-8{grid-column:span 12}.hero h1{font-size:25px}.arch{grid-template-columns:1fr 1fr}main{margin-top:18px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">Wallet<span>Wave</span></div><div class="tag">Digital wallet • Round 3 system design demo</div></div><div class="pill" style="color:#6d4aff;border-color:#ded6ff">● Demo environment</div></header>
+<main>
+<section class="hero"><div><div class="pill">SECURE WALLET</div><h1>Money moves, simply.</h1><p>Transfer, top up and track wallet activity.</p></div><div><div class="balance-label">YOUR WALLET · W101</div><div class="balance" id="balance">₹—</div><button class="secondary" onclick="refreshAll()">↻ Refresh balance</button></div></section>
+<div id="toast" class="toast"></div>
+<section class="grid">
+<div class="card span-4"><h2>＋ Add money</h2><label>Wallet</label><select id="addWallet"><option value="W101">W101 · Teju</option><option value="W202">W202 · Arun</option></select><label>Amount (₹)</label><input id="addAmount" type="number" min="1" step=".01" placeholder="e.g. 500"><button class="full" onclick="addMoney()">Add money</button></div>
+<div class="card span-4"><h2>⇄ Transfer money</h2><label>From wallet</label><select id="sender"><option value="W101">W101 · Teju</option><option value="W202">W202 · Arun</option></select><label>To wallet</label><select id="receiver"><option value="W202">W202 · Arun</option><option value="W101">W101 · Teju</option></select><label>Amount (₹)</label><input id="transferAmount" type="number" min="1" step=".01" placeholder="e.g. 250"><button class="full" onclick="transfer()">Transfer securely</button><div class="small" style="margin-top:8px">Uses atomic database updates + idempotency key.</div></div>
+<div class="card span-4"><h2>System health</h2><div class="statrow"><div class="stat"><small>API</small><b id="apiState">—</b></div><div class="stat"><small>Queued events</small><b id="queueCount">0</b></div></div><p class="small">Demo components represent caching and messaging. Production can use Redis + Kafka/RabbitMQ.</p><button class="secondary full" onclick="loadArchitecture()">View architecture</button></div>
+<div class="card span-8"><h2>Recent transactions</h2><div style="overflow:auto"><table><thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead><tbody id="transactions"><tr><td colspan="5">Loading…</td></tr></tbody></table></div><div class="small" style="margin-top:9px">Latest 100 records • CSV receipt download</div></div>
+<div class="card span-4"><h2>Notifications & events</h2><div id="notifications" class="small">Loading…</div><h2 style="margin-top:18px">Fraud alerts</h2><div id="fraudAlerts" class="small">Loading…</div></div>
+<div class="card span-12" id="architectureCard" style="display:none"><h2>High-level architecture</h2><div class="arch"><div><b>Client</b><br>Mobile / web app</div><div><b>Entry layer</b><br>Load balancer + API gateway</div><div><b>Services</b><br>User, wallet, payment, fraud</div><div><b>Storage</b><br>SQL transaction database</div><div><b>Cache</b><br>Redis (in production)</div><div><b>Messaging</b><br>Kafka / RabbitMQ (in production)</div></div><p class="small">Scalability plan: horizontal service instances, load balancing, indexes, read replicas/partitioning where needed, and asynchronous notification processing.</p></div>
+</section>
+<p class="small" style="margin:18px 2px">Sample accounts and money only. This is an educational prototype, not a real banking or payment service.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+async function api(url, options={}){const r=await fetch(url,{headers:{'Content-Type':'application/json',...(options.headers||{})},...options});const d=await r.json().catch(()=>({message:'Unexpected response'}));if(!r.ok)throw new Error(d.message||d.error||'Request failed');return d}
+function toast(msg,error=false){$('toast').textContent=msg;$('toast').className='toast'+(error?' error':'');$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',4500)}
+async function refreshBalance(){const d=await api('/api/wallets/W101/balance');$('balance').textContent='₹'+Number(d.balance).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+async function addMoney(){try{const amount=$('addAmount').value;const d=await api('/api/wallets/'+$('addWallet').value+'/add-money',{method:'POST',body:JSON.stringify({amount})});toast(d.message+' · Transaction '+d.transactionId);$('addAmount').value='';await refreshAll()}catch(e){toast(e.message,true)}}
+async function transfer(){try{const sender=$('sender').value,receiver=$('receiver').value,amount=$('transferAmount').value;if(sender===receiver)throw new Error('Choose two different wallets');const d=await api('/api/transfers',{method:'POST',headers:{'Idempotency-Key':crypto.randomUUID()},body:JSON.stringify({senderWalletId:sender,receiverWalletId:receiver,amount})});toast(d.message+' · '+d.transactionId+(d.riskScore>=70?' · Flagged for review':''));$('transferAmount').value='';await refreshAll()}catch(e){toast(e.message,true)}}
+async function loadTransactions(){const d=await api('/api/transactions');$('transactions').innerHTML=d.transactions.length?d.transactions.map(t=>`<tr><td>${t.transactionId}</td><td>${t.type.replace('_',' ')}</td><td>₹${Number(t.amount).toFixed(2)}</td><td class="status ${t.status}">${t.status}</td><td><a href="/api/transactions/${t.transactionId}/download">CSV</a></td></tr>`).join(''):'<tr><td colspan="5">No transactions yet</td></tr>'}
+async function loadNotifications(){const d=await api('/api/notifications');$('queueCount').textContent=d.queuedEvents;$('notifications').innerHTML=d.notifications.length?d.notifications.slice(0,5).map(n=>`<div class="notice"><b>${n.event}</b><br>${n.message}<br><small>${n.created_at}</small></div>`).join(''):'No events yet'}
+async function loadFraud(){const d=await api('/api/fraud-alerts');$('fraudAlerts').innerHTML=d.alerts.length?d.alerts.slice(0,4).map(a=>`<div class="notice"><b>Risk score: ${a.risk_score}/100</b><br>${a.reason}<br><small>${a.transaction_id}</small></div>`).join(''):'No fraud alerts'}
+async function loadArchitecture(){const el=$('architectureCard');el.style.display=el.style.display==='none'?'block':'none';await api('/api/architecture')}
+async function refreshAll(){try{await refreshBalance();await loadTransactions();await loadNotifications();await loadFraud();const h=await api('/api/health');$('apiState').textContent=h.status}catch(e){toast(e.message,true)}}
+refreshAll();
+</script>
+</body></html>
